@@ -4,62 +4,64 @@ namespace App\Http\Controllers;
 
 use App\Models\MataKuliah;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class MataKuliahController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Tampilkan semua matkul milik user yang login
     public function index()
     {
-        //
+        $matkul = MataKuliah::where('user_id', Auth::id())->get();
+        return response()->json($matkul);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Simpan matkul baru
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'nama_matkul' => 'required|string',
+            'kode_matkul' => 'required|string',
+            'sks' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $matkul = MataKuliah::create([
+            'user_id' => Auth::id(),
+            'nama_matkul' => $request->nama_matkul,
+            'kode_matkul' => $request->kode_matkul,
+            'sks' => $request->sks,
+        ]);
+
+        return response()->json(['message' => 'Mata kuliah berhasil ditambah', 'data' => $matkul], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(MataKuliah $mataKuliah)
+    // Update data matkul
+    public function update(Request $request, $id)
     {
-        //
+        $matkul = MataKuliah::where('user_id', Auth::id())->find($id);
+
+        if (!$matkul) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        $matkul->update($request->all());
+        return response()->json(['message' => 'Mata kuliah berhasil diupdate', 'data' => $matkul]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(MataKuliah $mataKuliah)
+    // Hapus matkul
+    public function destroy($id)
     {
-        //
-    }
+        $matkul = MataKuliah::where('user_id', Auth::id())->find($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, MataKuliah $mataKuliah)
-    {
-        //
-    }
+        if (!$matkul) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(MataKuliah $mataKuliah)
-    {
-        //
+        $matkul->delete();
+        return response()->json(['message' => 'Mata kuliah berhasil dihapus']);
     }
 }

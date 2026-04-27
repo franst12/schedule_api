@@ -10,22 +10,21 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('mata_kuliahs', function (Blueprint $table) {
+        Schema::create('notes', function (Blueprint $table) {
             $table->id();
-            // Hubungkan ke tabel users supaya tiap mahasiswa punya list sendiri
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('nama_matkul');
-            $table->string('kode_matkul');
-            $table->integer('sks');
+            $table->foreignId('jadwal_kuliah_id')->constrained('jadwal_kuliahs')->onDelete('cascade');
+            $table->string('judul_catatan');
+            $table->text('isi_catatan');
+            $table->string('link_materi')->nullable(); // Link Google Drive/YouTube
             $table->timestamps();
         });
     }
-
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('mata_kuliahs');
+        Schema::dropIfExists('notes');
     }
 };

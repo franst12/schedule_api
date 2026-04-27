@@ -10,22 +10,22 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('mata_kuliahs', function (Blueprint $table) {
+        Schema::create('assignments', function (Blueprint $table) {
             $table->id();
-            // Hubungkan ke tabel users supaya tiap mahasiswa punya list sendiri
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('nama_matkul');
-            $table->string('kode_matkul');
-            $table->integer('sks');
+            $table->foreignId('mata_kuliah_id')->constrained('mata_kuliahs')->onDelete('cascade');
+            $table->string('judul_tugas');
+            $table->text('deskripsi')->nullable();
+            $table->dateTime('deadline');
+            $table->boolean('is_finished')->default(false); // Status tugas
             $table->timestamps();
         });
     }
-
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('mata_kuliahs');
+        Schema::dropIfExists('assignments');
     }
 };
