@@ -16,8 +16,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'guard' => 'api', // Ubah dari 'web' ke 'api'
+        'passwords' => 'users',
     ],
 
     /*
@@ -38,8 +38,8 @@ return [
     */
 
     'guards' => [
-        'web' => [
-            'driver' => 'session',
+        'api' => [
+            'driver' => 'jwt', // Gunakan driver jwt
             'provider' => 'users',
         ],
     ],
