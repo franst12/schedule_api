@@ -18,10 +18,16 @@ class AuthController extends Controller
             'nim' => 'required|string|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // Tambahkan validasi foto
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
+        }
+
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('profile_photos', 'public');
         }
 
         $user = User::create([
@@ -29,15 +35,49 @@ class AuthController extends Controller
             'nim' => $request->nim,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'foto' => $fotoPath, // Simpan path foto ke database
         ]);
 
         $token = Auth::login($user);
+        return response()->json([
+            'message' => 'User berhasil didaftarkan',
+            'user' => $user,
+            'token' => $token
+        ], 201);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'string|max:255',
+            'nim' => 'string|unique:users,nim,' . $user->id,
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        if ($request->hasFile('foto')) {
+            if ($user->foto) {
+                \Illuminate\Support\Facades\Storage::delete('public/' . $user->foto);
+            }
+
+            $path = $request->file('foto')->store('profile_photos', 'public');
+            $user->foto = $path;
+        }
+
+        $user->name = $request->name ?? $user->name;
+        $user->nim = $request->nim ?? $user->nim;
+        $user->save();
 
         return response()->json([
-            'message' => 'User successfully registered',
+            'message' => 'Profil berhasil diperbarui',
             'user' => $user,
-            'token' => $token,
-        ], 201);
+            'foto_url' => $user->foto ? asset('storage/' . $user->foto) : null
+        ]);
     }
 
     // 2. Login & Generate JWT
