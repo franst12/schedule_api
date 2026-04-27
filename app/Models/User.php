@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject; // Import ini
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject // Tambahkan implements
+class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
-        'nim',     // Tambahkan NIM untuk profil mahasiswa
         'email',
         'password',
-        'foto',    // Tambahkan field foto
+        'nim',
+        'foto',
     ];
 
     protected $hidden = [
@@ -24,7 +24,14 @@ class User extends Authenticatable implements JWTSubject // Tambahkan implements
         'remember_token',
     ];
 
-    // Tambahkan dua method wajib dari JWTSubject ini di bawah:
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
