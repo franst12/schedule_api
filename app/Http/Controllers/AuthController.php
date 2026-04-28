@@ -18,16 +18,18 @@ class AuthController extends Controller
             'nim' => 'required|string|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'major' => 'nullable|string|max:255', // Tambahkan ini
-            'semester' => 'nullable|integer',      // Tambahkan ini
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // Sudah opsional
+            'major' => 'nullable|string|max:255',
+            'semester' => 'nullable|integer',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
+        // Default null kalau tidak ada file yang diupload
         $fotoPath = null;
+
         if ($request->hasFile('foto')) {
             $fotoPath = $request->file('foto')->store('profile_photos', 'public');
         }
@@ -38,11 +40,12 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'foto' => $fotoPath,
-            'major' => $request->major,       // Simpan ini
-            'semester' => $request->semester, // Simpan ini
+            'major' => $request->major,
+            'semester' => $request->semester,
         ]);
 
         $token = Auth::login($user);
+
         return response()->json([
             'message' => 'User berhasil didaftarkan',
             'user' => $user,

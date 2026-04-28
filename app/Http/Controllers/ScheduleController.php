@@ -13,23 +13,22 @@ class ScheduleController extends Controller
     public function scheduleToday()
     {
         $today = Carbon::now()->format('l');
-        $jadwal = Schedule::with('course')
+
+        $schedules = Schedule::with('course')
             ->where('user_id', Auth::id())
-            ->where('day', $today)
-            ->orderBy('start_time', 'asc')
+            ->whereRaw('LOWER(day) = ?', [strtolower($today)])
             ->get();
 
-        return response()->json($jadwal);
+        return response()->json($schedules);
     }
 
     public function index()
     {
-        $jadwal = Schedule::with('course')
+        $schedules = Schedule::with('course')
             ->where('user_id', Auth::id())
-            ->orderBy('day', 'asc')
             ->get();
 
-        return response()->json($jadwal);
+        return response()->json($schedules);
     }
 
     public function store(Request $request)
@@ -46,7 +45,7 @@ class ScheduleController extends Controller
             return response()->json($validator->errors(), 400);
         }
 
-        $jadwal = Schedule::create([
+        $schedule = Schedule::create([
             'user_id' => Auth::id(),
             'course_id' => $request->course_id,
             'day' => $request->day,
@@ -57,35 +56,47 @@ class ScheduleController extends Controller
 
         return response()->json([
             'message' => 'Jadwal berhasil ditambahkan',
-            'data' => $jadwal->load('course')
+            'data' => $schedule->load('course')
         ], 201);
     }
 
     public function update(Request $request, $id)
     {
-        $jadwal = Schedule::where('user_id', Auth::id())->find($id);
+        $schedule = Schedule::where('user_id', Auth::id())->find($id);
 
-        if (!$jadwal) {
+        if (!$schedule) {
             return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
         }
 
-        $jadwal->update($request->all());
+        $validator = Validator::make($request->all(), [
+            'course_id' => 'exists:courses,id',
+            'day' => 'string',
+            'start_time' => 'string',
+            'end_time' => 'string',
+            'room' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $schedule->update($request->all());
 
         return response()->json([
-            'message' => 'Jadwal berhasil diupdate',
-            'data' => $jadwal->load('course')
+            'message' => 'Jadwal berhasil diperbarui',
+            'data' => $schedule->load('course')
         ]);
     }
 
     public function destroy($id)
     {
-        $jadwal = Schedule::where('user_id', Auth::id())->find($id);
+        $schedule = Schedule::where('user_id', Auth::id())->find($id);
 
-        if (!$jadwal) {
+        if (!$schedule) {
             return response()->json(['message' => 'Jadwal tidak ditemukan'], 404);
         }
 
-        $jadwal->delete();
+        $schedule->delete();
 
         return response()->json(['message' => 'Jadwal berhasil dihapus']);
     }

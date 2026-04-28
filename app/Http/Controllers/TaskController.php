@@ -11,10 +11,31 @@ class TaskController extends Controller
 {
     public function index()
     {
-        // Tetap pakai with('course') biar di Flutter muncul nama matkulnya
         $tasks = Task::with('course')
             ->where('user_id', Auth::id())
             ->orderBy('deadline', 'asc')
+            ->get();
+
+        return response()->json($tasks);
+    }
+
+    public function taskPending()
+    {
+        $tasks = Task::with('course')
+            ->where('user_id', Auth::id())
+            ->where('is_finished', false)
+            ->orderBy('deadline', 'asc')
+            ->get();
+
+        return response()->json($tasks);
+    }
+
+    public function taskDone()
+    {
+        $tasks = Task::with('course')
+            ->where('user_id', Auth::id())
+            ->where('is_finished', true)
+            ->orderBy('deadline', 'desc')
             ->get();
 
         return response()->json($tasks);
@@ -25,7 +46,7 @@ class TaskController extends Controller
         $validator = Validator::make($request->all(), [
             'course_id' => 'required|exists:courses,id',
             'task_title' => 'required|string|max:255',
-            'description' => 'nullable|string', // Pastikan ini sama dengan $fillable
+            'description' => 'nullable|string',
             'deadline' => 'required|date',
         ]);
 
@@ -56,8 +77,18 @@ class TaskController extends Controller
             return response()->json(['message' => 'Tugas tidak ditemukan'], 404);
         }
 
-        // Pakai $request->all() boleh, tapi pastikan input dari Postman/Flutter
-        // sudah sesuai dengan nama kolom di $fillable
+        $validator = Validator::make($request->all(), [
+            'course_id' => 'exists:courses,id',
+            'task_title' => 'string|max:255',
+            'description' => 'nullable|string',
+            'deadline' => 'date',
+            'is_finished' => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
         $task->update($request->all());
 
         return response()->json([
@@ -66,7 +97,6 @@ class TaskController extends Controller
         ]);
     }
 
-    // Fungsi Mark As Finished sudah oke ngab!
     public function markAsFinished($id)
     {
         $task = Task::where('user_id', Auth::id())->find($id);
@@ -79,11 +109,10 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Tugas ditandai sebagai selesai',
-            'data' => $task
+            'data' => $task->load('course')
         ]);
     }
 
-    // Fungsi Destroy juga sudah mantap
     public function destroy($id)
     {
         $task = Task::where('user_id', Auth::id())->find($id);

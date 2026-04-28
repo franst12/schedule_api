@@ -20,6 +20,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResource('courses', CourseController::class);
     Route::get('/schedule/today', [ScheduleController::class, 'scheduleToday']);
     Route::apiResource('schedule', ScheduleController::class);
+    Route::get('/tasks/pending', [TaskController::class, 'taskPending']);
+    Route::get('/tasks/done', [TaskController::class, 'taskDone']);
     Route::apiResource('tasks', TaskController::class);
     Route::patch('tasks/{id}/finish', [TaskController::class, 'markAsFinished']);
     Route::apiResource('notes', NoteController::class);

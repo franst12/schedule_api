@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Schedule;
 
 class Note extends Model
 {
@@ -12,19 +11,18 @@ class Note extends Model
 
     protected $fillable = [
         'user_id',
-        'schedule_id',
-        'note_title',
-        'note_description',
-        'note_link',
+        'course_id',
+        'title',
+        'content',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function schedule()
+    public function course()
     {
-        return $this->belongsTo(Schedule::class);
+        return $this->belongsTo(Course::class);
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -16,44 +18,48 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'nim' => 'nullable|string|max:20',
-            'major' => 'nullable|string|max:255', // Tambahkan ini
-            'semester' => 'nullable|integer',      // Tambahkan ini
-            'password' => 'nullable|min:6',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        $validator = Validator::make($request->all(), [
+            'name' => 'string|max:255',
+            'nim' => 'string|max:20',
+            'major' => 'string|max:255',
+            'semester' => 'integer',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $user->name = $request->name;
-        $user->nim = $request->nim;
-        $user->major = $request->major;       // Update jurusan
-        $user->semester = $request->semester; // Update semester
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
         }
 
+        $data = $request->only(['name', 'nim', 'major', 'semester']);
+
         if ($request->hasFile('foto')) {
-            // Hapus foto lama jika ada
             if ($user->foto) {
                 Storage::delete('public/' . $user->foto);
             }
-
-            // Simpan ke folder 'profile_photos' biar seragam dengan register
-            $path = $request->file('foto')->store('profile_photos', 'public');
-            $user->foto = $path;
+            $fotoPath = $request->file('foto')->store('profile_photos', 'public');
+            $data['foto'] = $fotoPath;
         }
 
-        $user->save();
+        $user->update($data);
 
         return response()->json([
-            'message' => 'Profile updated successfully',
-            'user' => $user,
-            'foto_url' => $user->foto ? asset('storage/' . $user->foto) : null // Tambahkan URL biar Flutter gampang panggil
+            'message' => 'Profil berhasil diperbarui',
+            'data' => $user
         ]);
+    }
+
+    public function destroy()
+    {
+        $user = Auth::user();
+
+        if ($user->foto) {
+            Storage::delete('public/' . $user->foto);
+        }
+
+        $user->delete();
+
+        return response()->json(['message' => 'Akun berhasil dihapus']);
     }
 }
