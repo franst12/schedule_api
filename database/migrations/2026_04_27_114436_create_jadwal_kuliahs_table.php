@@ -10,14 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('jadwal_kuliahs', function (Blueprint $table) {
+        Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('mata_kuliah_id')->constrained('mata_kuliahs')->onDelete('cascade');
-            $table->string('hari'); // Senin, Selasa, dst.
-            $table->time('jam_mulai');
-            $table->time('jam_selesai');
-            $table->string('ruangan');
+            $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
+            $table->string('day');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->string('room');
             $table->timestamps();
         });
     }

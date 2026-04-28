@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Schedule;
 
 class Note extends Model
 {
@@ -11,10 +12,10 @@ class Note extends Model
 
     protected $fillable = [
         'user_id',
-        'jadwal_kuliah_id',
-        'judul_catatan',
-        'isi_catatan',
-        'link_materi'
+        'schedule_id',
+        'note_title',
+        'note_description',
+        'note_link',
     ];
 
     public function user()
@@ -22,8 +23,8 @@ class Note extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function jadwalKuliah()
+    public function schedule()
     {
-        return $this->belongsTo(JadwalKuliah::class);
+        return $this->belongsTo(Schedule::class);
     }
 }

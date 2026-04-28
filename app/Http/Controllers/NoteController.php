@@ -11,7 +11,7 @@ class NoteController extends Controller
 {
     public function index()
     {
-        $notes = Note::with('jadwalKuliah.mataKuliah')
+        $notes = Note::with('schedule.course')
             ->where('user_id', Auth::id())
             ->get();
 
@@ -21,10 +21,10 @@ class NoteController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'jadwal_kuliah_id' => 'required|exists:jadwal_kuliahs,id',
-            'judul_catatan' => 'required|string|max:255',
-            'isi_catatan' => 'required|string',
-            'link_materi' => 'nullable|url',
+            'schedule_id' => 'required|exists:schedules,id',
+            'note_title' => 'required|string|max:255',
+            'note_description' => 'nullable|string',
+            'note_link' => 'nullable|url',
         ]);
 
         if ($validator->fails()) {
@@ -33,21 +33,21 @@ class NoteController extends Controller
 
         $note = Note::create([
             'user_id' => Auth::id(),
-            'jadwal_kuliah_id' => $request->jadwal_kuliah_id,
-            'judul_catatan' => $request->judul_catatan,
-            'isi_catatan' => $request->isi_catatan,
-            'link_materi' => $request->link_materi,
+            'schedule_id' => $request->schedule_id,
+            'note_title' => $request->note_title,
+            'note_description' => $request->note_description,
+            'note_link' => $request->note_link,
         ]);
 
         return response()->json([
             'message' => 'Catatan berhasil dibuat',
-            'data' => $note->load('jadwalKuliah.mataKuliah')
+            'data' => $note->load('schedule.course')
         ], 201);
     }
 
     public function show($id)
     {
-        $note = Note::with('jadwalKuliah.mataKuliah')
+        $note = Note::with('schedule.course')
             ->where('user_id', Auth::id())
             ->find($id);
 
@@ -70,7 +70,7 @@ class NoteController extends Controller
 
         return response()->json([
             'message' => 'Catatan berhasil diperbarui',
-            'data' => $note->load('jadwalKuliah.mataKuliah')
+            'data' => $note->load('schedule.course')
         ]);
     }
 
@@ -83,7 +83,6 @@ class NoteController extends Controller
         }
 
         $note->delete();
-
         return response()->json(['message' => 'Catatan berhasil dihapus']);
     }
 }

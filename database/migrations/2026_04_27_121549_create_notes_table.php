@@ -13,10 +13,10 @@ return new class extends Migration {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('jadwal_kuliah_id')->constrained('jadwal_kuliahs')->onDelete('cascade');
-            $table->string('judul_catatan');
-            $table->text('isi_catatan');
-            $table->string('link_materi')->nullable(); // Link Google Drive/YouTube
+            $table->foreignId('schedule_id')->constrained('schedules')->onDelete('cascade');
+            $table->string('note_title');
+            $table->text('note_description')->nullable();
+            $table->string('note_link')->nullable(); // Link Google Drive/YouTube
             $table->timestamps();
         });
     }

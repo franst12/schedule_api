@@ -2,29 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Assignment;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class AssignmentController extends Controller
+class TaskController extends Controller
 {
     public function index()
     {
-        $assignments = Assignment::with('mataKuliah')
+        // Tetap pakai with('course') biar di Flutter muncul nama matkulnya
+        $tasks = Task::with('course')
             ->where('user_id', Auth::id())
             ->orderBy('deadline', 'asc')
             ->get();
 
-        return response()->json($assignments);
+        return response()->json($tasks);
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mata_kuliah_id' => 'required|exists:mata_kuliahs,id',
-            'judul_tugas' => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'course_id' => 'required|exists:courses,id',
+            'task_title' => 'required|string|max:255',
+            'description' => 'nullable|string', // Pastikan ini sama dengan $fillable
             'deadline' => 'required|date',
         ]);
 
@@ -32,76 +33,66 @@ class AssignmentController extends Controller
             return response()->json($validator->errors(), 400);
         }
 
-        $assignment = Assignment::create([
+        $task = Task::create([
             'user_id' => Auth::id(),
-            'mata_kuliah_id' => $request->mata_kuliah_id,
-            'judul_tugas' => $request->judul_tugas,
-            'deskripsi' => $request->deskripsi,
+            'course_id' => $request->course_id,
+            'task_title' => $request->task_title,
+            'description' => $request->description,
             'deadline' => $request->deadline,
             'is_finished' => false,
         ]);
 
         return response()->json([
             'message' => 'Tugas berhasil ditambahkan',
-            'data' => $assignment->load('mataKuliah')
+            'data' => $task->load('course')
         ], 201);
-    }
-
-    public function show($id)
-    {
-        $assignment = Assignment::with('mataKuliah')
-            ->where('user_id', Auth::id())
-            ->find($id);
-
-        if (!$assignment) {
-            return response()->json(['message' => 'Tugas tidak ditemukan'], 404);
-        }
-
-        return response()->json($assignment);
     }
 
     public function update(Request $request, $id)
     {
-        $assignment = Assignment::where('user_id', Auth::id())->find($id);
+        $task = Task::where('user_id', Auth::id())->find($id);
 
-        if (!$assignment) {
+        if (!$task) {
             return response()->json(['message' => 'Tugas tidak ditemukan'], 404);
         }
 
-        $assignment->update($request->all());
+        // Pakai $request->all() boleh, tapi pastikan input dari Postman/Flutter
+        // sudah sesuai dengan nama kolom di $fillable
+        $task->update($request->all());
 
         return response()->json([
             'message' => 'Tugas berhasil diperbarui',
-            'data' => $assignment->load('mataKuliah')
+            'data' => $task->load('course')
         ]);
     }
 
+    // Fungsi Mark As Finished sudah oke ngab!
     public function markAsFinished($id)
     {
-        $assignment = Assignment::where('user_id', Auth::id())->find($id);
+        $task = Task::where('user_id', Auth::id())->find($id);
 
-        if (!$assignment) {
+        if (!$task) {
             return response()->json(['message' => 'Tugas tidak ditemukan'], 404);
         }
 
-        $assignment->update(['is_finished' => true]);
+        $task->update(['is_finished' => true]);
 
         return response()->json([
             'message' => 'Tugas ditandai sebagai selesai',
-            'data' => $assignment
+            'data' => $task
         ]);
     }
 
+    // Fungsi Destroy juga sudah mantap
     public function destroy($id)
     {
-        $assignment = Assignment::where('user_id', Auth::id())->find($id);
+        $task = Task::where('user_id', Auth::id())->find($id);
 
-        if (!$assignment) {
+        if (!$task) {
             return response()->json(['message' => 'Tugas tidak ditemukan'], 404);
         }
 
-        $assignment->delete();
-
+        $task->delete();
         return response()->json(['message' => 'Tugas berhasil dihapus']);
     }
 }
